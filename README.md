@@ -22,6 +22,6 @@ uv sync
 Verify the installation:
 
 ```bash
-uv run python -c "import energy; print('ok)"
+uv run python -c "import energy; print('ok')"
 uv run pytest
 ```

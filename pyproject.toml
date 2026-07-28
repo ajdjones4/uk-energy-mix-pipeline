@@ -1,0 +1,31 @@
+[project]
+name = "uk-energy-mix-pipeline"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Arthur Jones", email = "283991589+ajdjones4@users.noreply.github.com" }
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pandas>=2.3.3",
+    "pyarrow>=21.0.0",
+    "requests>=2.32.5",
+]
+
+[project.scripts]
+uk-energy-mix-pipeline = "uk_energy_mix_pipeline:main"
+
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "energy"
+
+[dependency-groups]
+dev = [
+    "pandera>=0.26.1",
+    "pytest>=8.4.2",
+    "ruff>=0.16.0",
+]

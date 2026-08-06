@@ -1,12 +1,14 @@
+from uk_energy_mix.ingest.config import ROOT_DIR
 from pathlib import Path
 import requests
 import json
 import datetime
 
-date = datetime.date.today()
+SOURCE_NAME = "carbon_intensity"
+
 def file_path(dt):
-    filename = f"{Path(__file__).stem}_{dt}.json"
-    return filename
+    filepath = f"{ROOT_DIR}/{SOURCE_NAME}_{dt}.json"
+    return filepath
 
 
 #Where do we want the raw data to go
@@ -26,4 +28,5 @@ def file_path(dt):
 
 
 if __name__ == "__main__":
+    date = datetime.date.today()
     print(file_path(date))

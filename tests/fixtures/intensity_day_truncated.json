@@ -1,0 +1,25 @@
+{ 
+  "data":[{ 
+    "from": "2026-08-06T23:00Z",
+    "to": "2026-08-06T23:30Z",
+    "intensity": {
+      "forecast": 155,
+      "actual": 173,
+      "index": "high"
+    }
+  },
+  { 
+    "from": "2026-08-06T23:30Z",
+    "to": "2026-08-07T00:00Z",
+    "intensity": {
+      "forecast": 153,
+      "actual": 158,
+      "index": "moderate"
+    }
+  },
+  { 
+    "from": "2026-08-07T00:00Z",
+    "to": "2026-08-07T00:30Z",
+    "intensity": {
+      "forecast": 149,
+      "actual": 153,

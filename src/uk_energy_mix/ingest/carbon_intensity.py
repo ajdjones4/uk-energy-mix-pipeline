@@ -1,14 +1,14 @@
-from uk_energy_mix.ingest.config import ROOT_DIR
-from pathlib import Path
-import requests
-import datetime
-import sys
 import argparse
+import datetime
+from pathlib import Path
 
+import requests
+
+from uk_energy_mix.ingest.config import ROOT_DIR
 
 SOURCE_NAME = "carbon_intensity"
 SOURCE_URL = "https://api.carbonintensity.org.uk/intensity/date"
-HEADERS = {'Accept': 'application/json'}
+HEADERS = {"Accept": "application/json"}
 
 
 def file_path(dt: datetime.date) -> Path:
@@ -27,12 +27,18 @@ def fetch(source: str, dt: datetime.date, headers: dict | None = None) -> str:
 def write(data: str, filepath: Path) -> None:
     """Create parent directory if necessary and write text to file"""
     filepath.parent.mkdir(parents=True, exist_ok=True)
-    with open(filepath, 'w', encoding='utf-8') as file:
+    with open(filepath, "w", encoding="utf-8") as file:
         file.write(data)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("date", nargs="?", type=datetime.date.fromisoformat, default=datetime.date.today())
+    parser.add_argument(
+        "date",
+        nargs="?",
+        type=datetime.date.fromisoformat,
+        default=datetime.date.today(),
+    )
     args = parser.parse_args()
     dt = args.date
     r = fetch(SOURCE_URL, dt, HEADERS)

@@ -2,9 +2,13 @@ from uk_energy_mix.ingest.config import ROOT_DIR
 from pathlib import Path
 import requests
 import datetime
+import sys
+import argparse
+
 
 SOURCE_NAME = "carbon_intensity"
 SOURCE_URL = "https://api.carbonintensity.org.uk/intensity/date"
+HEADERS = {'Accept': 'application/json'}
 
 
 def file_path(dt: datetime.date) -> Path:
@@ -27,8 +31,10 @@ def write(data: str, filepath: Path) -> None:
         file.write(data)
 
 if __name__ == "__main__":
-    date = "2026-08-07"
-    header = {
-        'Accept': 'application/json'
-    }
-    write(fetch(SOURCE_URL, date, header), file_path(date))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("date", nargs="?", type=datetime.date.fromisoformat, default=datetime.date.today())
+    args = parser.parse_args()
+    dt = args.date
+    r = fetch(SOURCE_URL, dt, HEADERS)
+    target = file_path(dt)
+    write(r, target)

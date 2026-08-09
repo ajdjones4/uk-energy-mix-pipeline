@@ -28,6 +28,7 @@ module-name = "uk_energy_mix"
 dev = [
     "pandera>=0.26.1",
     "pytest>=8.4.2",
+    "responses>=0.26.2",
     "ruff>=0.16.0",
 ]
 

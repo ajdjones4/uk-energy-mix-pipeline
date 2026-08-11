@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 import requests
 import responses
+from tenacity import wait_none
 
 from uk_energy_mix.ingest import carbon_intensity
 
@@ -12,7 +13,7 @@ dt = datetime.date.fromisoformat("2026-08-07")
 source = carbon_intensity.SOURCE_URL
 fpath = Path(__file__).parent / "fixtures" / "intensity_day.json"
 fixture = fpath.read_text(encoding="utf-8")
-
+carbon_intensity.fetch.retry.wait = wait_none()
 
 def test_path():
     assert str(carbon_intensity.file_path(dt)).endswith(
@@ -55,6 +56,7 @@ def test_fetch_raises_on_404():
     responses.add(responses.GET, f"{source}/{dt}", status=404)
     with pytest.raises(requests.HTTPError):
         carbon_intensity.fetch(source, dt)
+    assert len(responses.calls) == 1
 
 
 @responses.activate
@@ -62,3 +64,11 @@ def test_fetch_timeout():
     responses.add(responses.GET, f"{source}/{dt}", body=requests.Timeout())
     with pytest.raises(requests.Timeout):
         carbon_intensity.fetch(source, dt)
+
+
+@responses.activate
+def test_fetch_retries_503():
+    responses.add(responses.GET, f"{source}/{dt}", status=503)
+    with pytest.raises(requests.HTTPError):
+        carbon_intensity.fetch(source, dt)
+    assert len(responses.calls) == 3

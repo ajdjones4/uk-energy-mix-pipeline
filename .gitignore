@@ -220,3 +220,6 @@ __marimo__/
 #data
 data/raw/*
 !data/raw/.gitkeep
+
+#notebook - scripts i can mess with to get info out
+notebook/

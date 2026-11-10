@@ -59,7 +59,6 @@ def fetch(source: str, dt: datetime.date, headers: dict | None = None) -> str:
     logger.info("Fetched %s chars in %.2fs", len(response.text), elapsed)
     return response.text
 
-
 def write(data: str, filepath: Path) -> None:
     """Create parent directory if necessary and write text to file"""
     filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -82,12 +81,7 @@ if __name__ == "__main__":
     logger.info("Fetching carbon intensity data for %s", dt)
     try:
         r = fetch(SOURCE_URL, dt, HEADERS)
-        #r_obj = json.loads(r)
-        #key = [*r_obj]
-        #if key != ['data']:
-        #    raise ValueError
-        #if len(r_obj["data"]) != 48:
-        #    raise ValueError
+        #validate
         target = file_path(dt)
         write(r, target)
     except Exception:

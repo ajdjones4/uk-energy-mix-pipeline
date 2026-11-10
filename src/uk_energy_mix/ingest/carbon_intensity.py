@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import json
 import logging
 import sys
 from pathlib import Path
@@ -81,6 +82,12 @@ if __name__ == "__main__":
     logger.info("Fetching carbon intensity data for %s", dt)
     try:
         r = fetch(SOURCE_URL, dt, HEADERS)
+        #r_obj = json.loads(r)
+        #key = [*r_obj]
+        #if key != ['data']:
+        #    raise ValueError
+        #if len(r_obj["data"]) != 48:
+        #    raise ValueError
         target = file_path(dt)
         write(r, target)
     except Exception:

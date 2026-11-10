@@ -59,6 +59,14 @@ def fetch(source: str, dt: datetime.date, headers: dict | None = None) -> str:
     logger.info("Fetched %s chars in %.2fs", len(response.text), elapsed)
     return response.text
 
+def validate(obj: str):
+    """Check that what we fetch is what we want before we write it to a file"""
+    j_obj = json.loads(obj)
+    if 'data' not in j_obj:
+        raise ValueError("Fetched object contains no data")
+    #if len(r_obj["data"]) != 48:
+    #    raise ValueError
+
 def write(data: str, filepath: Path) -> None:
     """Create parent directory if necessary and write text to file"""
     filepath.parent.mkdir(parents=True, exist_ok=True)

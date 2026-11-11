@@ -1,6 +1,6 @@
 # uk-energy-mix-pipeline
 
-UK Energy Mix Pipeline Portfolio Project. A project building an end-to-end data pipeline ingesting open source UK energy generation, cost, carbon intensity and weather data. Ingested with Python, transformed in DuckDB and presented in Power BI.
+UK Energy Mix Pipeline Portfolio Project. A project building an end-to-end data pipeline ingesting open source UK energy generation, cost, carbon intensity and weather data. Ingested with Python, transformed in DuckDB and presented in Power BI. The pipeline will run un-attended, handle failure and cover everything upstream of Power BI.
 
 ## Status
 
@@ -24,7 +24,7 @@ First ingestion script (carbon intensity) written in Python with associated test
 
 ### Time and clock changes
 
-<!-- 46/48/50 periods, UTC storage, 25 Oct 2026 evidence -->
+Times from the Carbon Intensity API are in UTC. March clock change day returns 46 records while October clock change day returns 50 records. A normal day returns 48. A validation function ensures that the record fetched contains one of these amounts. UTC will be converted to Europe/London.
 
 ## Getting Started
 

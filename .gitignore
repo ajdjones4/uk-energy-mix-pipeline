@@ -223,3 +223,7 @@ data/raw/*
 
 #notebook - scripts i can mess with to get info out
 notebook/
+
+# logs - keep the folder, ignore the contents
+logs/*
+!logs/.gitkeep

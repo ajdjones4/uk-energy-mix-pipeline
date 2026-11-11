@@ -59,13 +59,17 @@ def fetch(source: str, dt: datetime.date, headers: dict | None = None) -> str:
     logger.info("Fetched %s chars in %.2fs", len(response.text), elapsed)
     return response.text
 
-def validate(obj: str):
+def validate(text: str) -> int:
     """Check that what we fetch is what we want before we write it to a file"""
-    j_obj = json.loads(obj)
-    if 'data' not in j_obj:
-        raise ValueError("Fetched object contains no data")
-    #if len(r_obj["data"]) != 48:
-    #    raise ValueError
+    payload = json.loads(text)
+    if not isinstance(payload, dict):
+        raise TypeError(f"Fetched object is of type {type(payload).__name__}")
+    if "data" not in payload:
+        raise ValueError(f"Fetched object has keys {list(payload)}")
+    count = len(payload["data"])
+    if count not in {46, 48, 50}:
+        raise ValueError(f"Fetched object is of length {count}")
+    return count
 
 def write(data: str, filepath: Path) -> None:
     """Create parent directory if necessary and write text to file"""
@@ -89,7 +93,8 @@ if __name__ == "__main__":
     logger.info("Fetching carbon intensity data for %s", dt)
     try:
         r = fetch(SOURCE_URL, dt, HEADERS)
-        #validate
+        count = validate(r)
+        logger.info("Validated %s: %s records", dt, count)
         target = file_path(dt)
         write(r, target)
     except Exception:

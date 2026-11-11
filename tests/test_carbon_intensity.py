@@ -1,6 +1,7 @@
 import datetime
 from pathlib import Path
 
+import json
 import pytest
 import requests
 import responses
@@ -11,8 +12,9 @@ from uk_energy_mix.ingest import carbon_intensity
 CONTENT = "Hello World"
 dt = datetime.date.fromisoformat("2026-08-07")
 source = carbon_intensity.SOURCE_URL
-fpath = Path(__file__).parent / "fixtures" / "intensity_day.json"
-fixture = fpath.read_text(encoding="utf-8")
+FIXTURES = Path(__file__).parent / "fixtures"
+GOOD_PAYLOAD = (FIXTURES / "intensity_day.json").read_text(encoding="utf-8")
+BAD_PAYLOAD = (FIXTURES / "intensity_day_truncated.json").read_text(encoding="utf-8")
 carbon_intensity.fetch.retry.wait = wait_none()
 
 def test_path():
@@ -37,13 +39,13 @@ def test_write_idempotency(tmp_path):
 
 @responses.activate
 def test_fetch_returns_body():
-    responses.add(responses.GET, f"{source}/{dt}", body=fixture, status=200)
-    assert carbon_intensity.fetch(source, dt) == fixture
+    responses.add(responses.GET, f"{source}/{dt}", body=GOOD_PAYLOAD, status=200)
+    assert carbon_intensity.fetch(source, dt) == GOOD_PAYLOAD
 
 
 @responses.activate
 def test_fetch_constructs_correct_url():
-    responses.add(responses.GET, f"{source}/{dt}", body=fixture, status=200)
+    responses.add(responses.GET, f"{source}/{dt}", body=GOOD_PAYLOAD, status=200)
     carbon_intensity.fetch(source, dt)
     assert (
         responses.calls[0].request.url
@@ -72,3 +74,16 @@ def test_fetch_retries_503():
     with pytest.raises(requests.HTTPError):
         carbon_intensity.fetch(source, dt)
     assert len(responses.calls) == 3
+
+def test_validation_pass():
+    assert carbon_intensity.validate(GOOD_PAYLOAD) == 48
+
+
+@pytest.mark.parametrize(("test_input", "expected"), 
+                         [(BAD_PAYLOAD, json.JSONDecodeError), 
+                          ("[]", TypeError), 
+                          ('{"foo": []}', ValueError), 
+                          (json.dumps({"data": [{}] * 12}), ValueError) ])
+def test_validation_raises(test_input, expected):
+    with pytest.raises(expected):
+        carbon_intensity.validate(test_input)

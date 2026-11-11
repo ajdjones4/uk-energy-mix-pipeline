@@ -1,28 +1,30 @@
 # uk-energy-mix-pipeline
 
-UK Energy Mix Pipeline Portfolio Project. A project building an end-to-end data pipeline ingesting open source UK energy generation, cost, carbon intensity and weather data. Ingested with python, transformed in DuckDB and presented in PowerBI.
+UK Energy Mix Pipeline Portfolio Project. A project building an end-to-end data pipeline ingesting open source UK energy generation, cost, carbon intensity and weather data. Ingested with Python, transformed in DuckDB and presented in Power BI.
 
 ## Status
 
 ### Done
 
-First Ingestion script (carbon intensity) written in Python with associated tests to fetch JSON data from the NESO Carbon Intensity API. Uses requests to fetch data, retries with tenacity, argparse for CLI interfacing, logging. A bash backfill script to fetch historic data.
+First ingestion script (carbon intensity) written in Python with associated tests to fetch JSON data from the NESO Carbon Intensity API. Uses requests to fetch data, retries with tenacity, a validation gate that checks each payload before it is written, argparse for the CLI, and logging. A bash backfill script fetches historic data.
 
 ### Next
 
-Elexon API
-NESO API
-DuckDB Transformations
-...?
+- Elexon API
+- NESO Data Portal API
+- DuckDB transformations
+
 ## Data Sources
 
 | Source | Endpoint | Grain | Refresh cadence | Licence |
-|NESO Carbon Intensity|api.carbonintensity.org.uk|half hourly|TBD|"Carbon Intensity API" by NESO is licensed under CC BY 4.0|
-|  |  |  |  |  |
+|---|---|---|---|---|
+| NESO Carbon Intensity | `api.carbonintensity.org.uk/intensity/date/{date}` | Half-hourly | TBD | "Carbon Intensity API" by NESO, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 
 ## Design Notes
 
 ### Time and clock changes
+
+<!-- 46/48/50 periods, UTC storage, 25 Oct 2026 evidence -->
 
 ## Getting Started
 
@@ -71,3 +73,7 @@ Raw responses land in `data/raw/<source>/<date>.json`. Re-running a date overwri
 uv run ruff check . && uv run ruff format .
 uv run pytest
 ```
+
+## Acknowledgements
+
+This project was built as an example learning project with the help of [Claude](https://claude.ai) (Anthropic). Claude was used to help debug code, provide targetted learning resources and advise on a roadmap and next-steps. All design decisions and implementations are my own.

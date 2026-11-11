@@ -1,7 +1,7 @@
 import datetime
+import json
 from pathlib import Path
 
-import json
 import pytest
 import requests
 import responses
@@ -16,6 +16,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 GOOD_PAYLOAD = (FIXTURES / "intensity_day.json").read_text(encoding="utf-8")
 BAD_PAYLOAD = (FIXTURES / "intensity_day_truncated.json").read_text(encoding="utf-8")
 carbon_intensity.fetch.retry.wait = wait_none()
+
 
 def test_path():
     assert str(carbon_intensity.file_path(dt)).endswith(
@@ -75,15 +76,20 @@ def test_fetch_retries_503():
         carbon_intensity.fetch(source, dt)
     assert len(responses.calls) == 3
 
+
 def test_validation_pass():
     assert carbon_intensity.validate(GOOD_PAYLOAD) == 48
 
 
-@pytest.mark.parametrize(("test_input", "expected"), 
-                         [(BAD_PAYLOAD, json.JSONDecodeError), 
-                          ("[]", TypeError), 
-                          ('{"foo": []}', ValueError), 
-                          (json.dumps({"data": [{}] * 12}), ValueError) ])
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
+    [
+        (BAD_PAYLOAD, json.JSONDecodeError),
+        ("[]", TypeError),
+        ('{"foo": []}', ValueError),
+        (json.dumps({"data": [{}] * 12}), ValueError),
+    ],
+)
 def test_validation_raises(test_input, expected):
     with pytest.raises(expected):
         carbon_intensity.validate(test_input)

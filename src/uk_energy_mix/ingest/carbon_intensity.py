@@ -59,6 +59,7 @@ def fetch(source: str, dt: datetime.date, headers: dict | None = None) -> str:
     logger.info("Fetched %s chars in %.2fs", len(response.text), elapsed)
     return response.text
 
+
 def validate(text: str) -> int:
     """Check that what we fetch is what we want before we write it to a file"""
     payload = json.loads(text)
@@ -70,6 +71,7 @@ def validate(text: str) -> int:
     if count not in {46, 48, 50}:
         raise ValueError(f"Fetched object is of length {count}")
     return count
+
 
 def write(data: str, filepath: Path) -> None:
     """Create parent directory if necessary and write text to file"""

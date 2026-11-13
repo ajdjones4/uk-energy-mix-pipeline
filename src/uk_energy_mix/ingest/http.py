@@ -1,5 +1,6 @@
 import requests
 
+
 def is_retryable_error(exception: BaseException) -> bool:
     """Retry on Timeout, Connection Error, 429 or server-side HTTP Error (5xx)"""
     if isinstance(exception, (requests.Timeout, requests.ConnectionError)):

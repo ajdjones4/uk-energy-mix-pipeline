@@ -43,10 +43,13 @@ def file_path(
 def build_query(resource_id: str, date_col: str, dt: datetime.date) -> str:
     """Build the SQL query to retrieve desired data from CKAN API"""
     dateafter = dt + datetime.timedelta(days=1)
-    sql_query = (f'''SELECT * FROM "{resource_id}" ''' 
-                 f'''WHERE "{date_col}" >= '{dt}' ''' 
-                 f'''AND "{date_col}" < '{dateafter}' ''')
+    sql_query = (
+        f'''SELECT * FROM "{resource_id}" '''
+        f'''WHERE "{date_col}" >= '{dt}' '''
+        f'''AND "{date_col}" < '{dateafter}' '''
+    )
     return sql_query
+
 
 def fetch(source: str, headers: dict | None = None, params: dict | None = None) -> str:
     """Make the API call, return the json as raw text"""

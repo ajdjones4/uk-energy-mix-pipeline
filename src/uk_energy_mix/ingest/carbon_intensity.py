@@ -11,7 +11,6 @@ from tenacity import (
     before_sleep_log,
     retry,
     retry_if_exception,
-    retry_if_exception_type,
     stop_after_attempt,
     wait_random_exponential,
 )
@@ -30,6 +29,7 @@ def file_path(dt: datetime.date) -> Path:
     """Generate the file path based on the data source and given date"""
     filepath = ROOT_DIR / "data" / "raw" / SOURCE_NAME / f"{dt}.json"
     return filepath
+
 
 @retry(
     stop=stop_after_attempt(3),

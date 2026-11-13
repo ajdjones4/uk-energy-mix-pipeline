@@ -1,13 +1,14 @@
+import pytest
 import requests
 
-import pytest
-
 from uk_energy_mix.ingest import http
+
 
 def make_http_error(status_code: int) -> requests.HTTPError:
     response = requests.Response()
     response.status_code = status_code
     return requests.HTTPError(response=response)
+
 
 @pytest.mark.parametrize(
     ("error", "is_retryable"),
@@ -23,7 +24,7 @@ def make_http_error(status_code: int) -> requests.HTTPError:
         (requests.HTTPError(), False),
         (requests.Timeout(), True),
         (requests.ConnectionError(), True),
-        (ValueError(), False)
+        (ValueError(), False),
     ],
 )
 def test_is_retryable_error(error, is_retryable):

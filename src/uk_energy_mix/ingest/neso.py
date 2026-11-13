@@ -3,8 +3,16 @@ from pathlib import Path
 from time import sleep
 
 import requests
+from tenacity import (
+    before_sleep_log,
+    retry,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_fixed
+)
 
 from uk_energy_mix.ingest.config import ROOT_DIR
+from uk_energy_mix.ingest.http import is_retryable_error
 
 SOURCE_NAME = "neso"
 SOURCE_URL = "https://api.neso.energy/api/3/action/datastore_search_sql"
@@ -50,7 +58,13 @@ def build_query(resource_id: str, date_col: str, dt: datetime.date) -> str:
     )
     return sql_query
 
-
+@retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(30),
+        retry=retry_if_exception(is_retryable_error),
+        #before_sleep=before_sleep_log()
+        reraise=True
+)
 def fetch(source: str, headers: dict | None = None, params: dict | None = None) -> str:
     """Make the API call, return the json as raw text"""
     response = requests.get(source, headers=headers, params=params, timeout=10)

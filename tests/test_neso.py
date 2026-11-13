@@ -9,7 +9,8 @@ from tenacity import wait_none
 from uk_energy_mix.ingest import neso
 
 SNAPSHOT_DATE = datetime.date.fromisoformat("2026-11-12")
-DATA_DATE = datetime.date.fromisoformat("2026-10-25")
+DATE_FROM = datetime.date.fromisoformat("2026-10-25")
+DATE_TO = datetime.date.fromisoformat("2026-10-25")
 DATASET_NAME = "historic-generation-data"
 RESOURCE_ID = "f93d1835-75bc-43e5-84ad-12472b180a98"
 DATE_COL = "DATETIME"
@@ -22,11 +23,11 @@ GOOD_PAYLOAD = (FIXTURES / "generation_mix_2026-10-25.json").read_text(encoding=
 neso.fetch.retry.wait = wait_none()
 
 def test_file_path():
-    path = neso.file_path(SNAPSHOT_DATE, DATA_DATE, DATASET_NAME)
+    path = neso.file_path(SNAPSHOT_DATE, DATE_FROM, DATE_TO, DATASET_NAME)
     assert path.parts[-3:] == (
         "historic-generation-data",
-        "2026-10-25",
-        "2026-11-12.json",
+        "ingest_date=2026-11-12",
+        "2026-10-25_2026-10-25.json",
     )
 
 @pytest.mark.parametrize(
@@ -39,7 +40,7 @@ def test_file_path():
     ids=["generation_mix", "demand", "update"],
 )
 def test_build_query(resource_id, date_col, expected):
-    assert neso.build_query(resource_id, date_col, DATA_DATE) == expected
+    assert neso.build_query(resource_id, date_col, DATE_FROM, DATE_TO) == expected
 
 @responses.activate
 def test_fetch_raises_on_404():

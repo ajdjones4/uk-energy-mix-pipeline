@@ -33,7 +33,7 @@ DATASETS = {
 
 
 def file_path(
-    snapshot_date: datetime.date, data_date: datetime.date, dataset: str
+    snapshot_date: datetime.date, dt_from: datetime.date, dt_to: datetime.date, dataset: str
 ) -> Path:
     """Generate the file path based on the data source and snapshot date"""
     filepath = (
@@ -41,20 +41,20 @@ def file_path(
         / "data"
         / "raw"
         / SOURCE_NAME
-        / f"{dataset}"
-        / f"{data_date}"
-        / f"{snapshot_date}.json"
+        / dataset
+        / f"ingest_date={snapshot_date}"
+        / f"{dt_from}_{dt_to}.json"
     )
     return filepath
 
 
-def build_query(resource_id: str, date_col: str, dt: datetime.date) -> str:
-    """Build the SQL query to retrieve desired data from CKAN API"""
-    dateafter = dt + datetime.timedelta(days=1)
+def build_query(resource_id: str, date_col: str, dt_from: datetime.date, dt_to: datetime.date) -> str:
+    """Build the SQL query to retrieve desired data from CKAN API, end date inclusive"""
+    dt_end_exclusive = dt_to + datetime.timedelta(days=1)
     sql_query = (
         f'''SELECT * FROM "{resource_id}" '''
-        f'''WHERE "{date_col}" >= '{dt}' '''
-        f'''AND "{date_col}" < '{dateafter}' '''
+        f'''WHERE "{date_col}" >= '{dt_from}' '''
+        f'''AND "{date_col}" < '{dt_end_exclusive}' '''
     )
     return sql_query
 

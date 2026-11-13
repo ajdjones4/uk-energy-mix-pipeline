@@ -17,18 +17,15 @@ GOOD_PAYLOAD = (FIXTURES / "intensity_day.json").read_text(encoding="utf-8")
 BAD_PAYLOAD = (FIXTURES / "intensity_day_truncated.json").read_text(encoding="utf-8")
 carbon_intensity.fetch.retry.wait = wait_none()
 
-
 def test_path():
     assert str(carbon_intensity.file_path(dt)).endswith(
         "data/raw/carbon_intensity/2026-08-07.json"
     )
 
-
 def test_write_creates_missing_parent_directories(tmp_path):
     d = tmp_path / "one" / "two" / "three" / "four.json"
     carbon_intensity.write(CONTENT, d)
     assert d.read_text(encoding="utf-8") == CONTENT
-
 
 def test_write_idempotency(tmp_path):
     d = tmp_path / "test.json"

@@ -17,6 +17,7 @@ from tenacity import (
 )
 
 from uk_energy_mix.ingest.config import ROOT_DIR
+from uk_energy_mix.ingest.http import is_retryable_error
 
 SOURCE_NAME = "carbon_intensity"
 SOURCE_URL = "https://api.carbonintensity.org.uk/intensity/date"
@@ -30,21 +31,10 @@ def file_path(dt: datetime.date) -> Path:
     filepath = ROOT_DIR / "data" / "raw" / SOURCE_NAME / f"{dt}.json"
     return filepath
 
-
-def is_retryable_error(exception: BaseException) -> bool:
-    """Retry only on server-side HTTP errors (5xx)"""
-    if not isinstance(exception, requests.HTTPError):
-        return False
-    if exception.response is None:
-        return False
-    return 500 <= exception.response.status_code < 600
-
-
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_random_exponential(multiplier=1, max=30),
-    retry=retry_if_exception_type((requests.ConnectionError, requests.Timeout))
-    | retry_if_exception(is_retryable_error),
+    retry=retry_if_exception(is_retryable_error),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True,
 )

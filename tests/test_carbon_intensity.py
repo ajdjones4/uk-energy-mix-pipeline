@@ -12,7 +12,7 @@ from uk_energy_mix.ingest import carbon_intensity
 CONTENT = "Hello World"
 dt = datetime.date.fromisoformat("2026-08-07")
 source = carbon_intensity.SOURCE_URL
-FIXTURES = Path(__file__).parent / "fixtures"
+FIXTURES = Path(__file__).parent / "fixtures" / "carbon_intensity"
 GOOD_PAYLOAD = (FIXTURES / "intensity_day.json").read_text(encoding="utf-8")
 BAD_PAYLOAD = (FIXTURES / "intensity_day_truncated.json").read_text(encoding="utf-8")
 carbon_intensity.fetch.retry.wait = wait_none()

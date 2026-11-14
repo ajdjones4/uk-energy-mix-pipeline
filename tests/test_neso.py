@@ -19,7 +19,10 @@ QUERY_DEMAND = """SELECT * FROM "8a4a771c-3929-4e56-93ad-cdf13219dea5" WHERE "SE
 QUERY_UPDATE = """SELECT * FROM "177f6fa4-ae49-4182-81ea-0c6b35f26ca6" WHERE "SETTLEMENT_DATE" >= '2026-10-25' AND "SETTLEMENT_DATE" < '2026-10-26' """
 SOURCE = "https://api.neso.energy/api/3/action/datastore_search_sql"
 FIXTURES = Path(__file__).parent / "fixtures" / "neso"
-GOOD_PAYLOAD = (FIXTURES / "generation_mix_2026-10-25.json").read_text(encoding="utf-8")
+GOOD_GEN_PAYLOAD = (FIXTURES / "generation_mix_2026-10-25.json").read_text(encoding="utf-8")
+GOOD_DEMAND_PAYLOAD = (FIXTURES / "demand_update_2026-10-25.json").read_text(encoding="utf-8")
+EMPTY_DEMAND_PAYLOAD = (FIXTURES / "empty_historic_demand_2026-10-25.json").read_text(encoding="utf-8")
+PAYLOAD_409 = (FIXTURES / "409_demand_update_2026-10-25.json").read_text(encoding="utf-8")
 neso.fetch.retry.wait = wait_none()
 
 def test_file_path():
@@ -72,13 +75,45 @@ def test_fetch_409():
 
 @responses.activate
 def test_fetch_returns_body():
-    responses.add(responses.GET, SOURCE, body=GOOD_PAYLOAD, status=200)
-    assert neso.fetch(SOURCE) == GOOD_PAYLOAD
+    responses.add(responses.GET, SOURCE, body=GOOD_GEN_PAYLOAD, status=200)
+    assert neso.fetch(SOURCE) == GOOD_GEN_PAYLOAD
     assert len(responses.calls) == 1
 
 @responses.activate
 def test_429_retries_200():
     responses.add(responses.GET, SOURCE, status=429)
-    responses.add(responses.GET, SOURCE, body=GOOD_PAYLOAD, status=200)
-    assert neso.fetch(SOURCE) == GOOD_PAYLOAD
+    responses.add(responses.GET, SOURCE, body=GOOD_GEN_PAYLOAD, status=200)
+    assert neso.fetch(SOURCE) == GOOD_GEN_PAYLOAD
     assert len(responses.calls) == 2
+
+@pytest.mark.parametrize(
+        ("test_input", "expected"),
+        [
+            (GOOD_GEN_PAYLOAD, 48),
+            (GOOD_DEMAND_PAYLOAD, 50),
+            (EMPTY_DEMAND_PAYLOAD, 0)
+
+        ],
+)
+def test_validation_pass(test_input, expected):
+    assert neso.validate(test_input) == expected
+
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
+    [
+        ("not json at all", ValueError),                                  
+        ("[]", TypeError),                                                
+        ('{"help": "https://example"}', ValueError),                      
+        ('{"success": false}', ValueError),                               
+        ('{"success": true}', ValueError),                                
+        ('{"success": true, "result": {}}', ValueError),                  
+        ('{"success": true, "result": {"records": "oops"}}', TypeError),
+    ],
+)
+def test_validation_raises(test_input, expected):
+    with pytest.raises(expected):
+        neso.validate(test_input)
+
+def test_validate_CKAN_error():
+    with pytest.raises(ValueError, match="does not exist"):
+        neso.validate(PAYLOAD_409)

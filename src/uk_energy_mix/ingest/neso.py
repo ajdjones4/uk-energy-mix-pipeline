@@ -1,6 +1,8 @@
 import datetime
 from pathlib import Path
 from time import sleep
+from zoneinfo import ZoneInfo
+import json
 
 import requests
 from tenacity import (
@@ -20,14 +22,17 @@ DATASETS = {
     "historic-generation-mix": {
         "resource_id": "f93d1835-75bc-43e5-84ad-12472b180a98",
         "datecol": "DATETIME",
+        "date_tz": "UTC"
     },
     "historic-demand-data": {
         "resource_id": "8a4a771c-3929-4e56-93ad-cdf13219dea5",
         "datecol": "SETTLEMENT_DATE",
+        "date_tz": "Europe/London"
     },
     "demand-data-update": {
         "resource_id": "177f6fa4-ae49-4182-81ea-0c6b35f26ca6",
         "datecol": "SETTLEMENT_DATE",
+        "date_tz": "Europe/London"
     },
 }
 
@@ -70,6 +75,44 @@ def fetch(source: str, headers: dict | None = None, params: dict | None = None) 
     response = requests.get(source, headers=headers, params=params, timeout=10)
     response.raise_for_status()
     return response.text
+
+
+def expected_records(dt_from: datetime.date, dt_to: datetime.date, timezone: str) -> int:
+    """Calculate the number of 30 minute intervals in the given date range"""
+    dt_to_exclusive = dt_to + datetime.timedelta(days=1)
+    dt_from_london = datetime.datetime.combine(dt_from, time=datetime.time.min, tzinfo=ZoneInfo(timezone))
+    dt_to_exclusive_london = datetime.datetime.combine(dt_to_exclusive, time=datetime.time.min, tzinfo=ZoneInfo(timezone))
+    dt_from_utc = dt_from_london.astimezone(datetime.UTC)
+    dt_to_exclusive_utc = dt_to_exclusive_london.astimezone(datetime.UTC)
+    interval = dt_to_exclusive_utc - dt_from_utc
+    periods = interval / datetime.timedelta(minutes=30)
+    return int(periods)
+
+
+def validate(text: str) -> int:
+    """Check that the payload is structurally correct before we write it to file. 
+       Return number of records"""
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError as err:
+        raise ValueError("NESO payload wasn't valid JSON") from err
+    if not isinstance(payload, dict):
+        raise TypeError(f"Fetched object is of type {type(payload).__name__}")
+    if "success" not in payload:
+        raise ValueError(f"Fetched object has keys {list(payload)}")
+    if not payload['success']:
+        error_message = payload.get("error", "no error message returned")
+        raise ValueError(f"Payload return failed with error message: {error_message}")
+    if "result" not in payload:
+        raise ValueError("Payload missing results")
+    if "records" not in payload['result']:
+        raise ValueError("Payload results missing records")
+    records = payload['result']['records']
+    if not isinstance(records, list):
+        raise TypeError("Returned records object is of type " 
+                        f"{type(records).__name__}, should be list.")
+    count = len(records)
+    return count
 
 
 def write(data: str, filepath: Path) -> None:

@@ -69,6 +69,7 @@ def test_fetch_timeout():
         carbon_intensity.fetch(source, dt)
     assert len(responses.calls) == 3
 
+
 @responses.activate
 def test_fetch_retries_503():
     responses.add(responses.GET, f"{source}/{dt}", status=503)

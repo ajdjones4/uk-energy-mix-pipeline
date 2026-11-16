@@ -94,3 +94,6 @@ def test_validation_pass():
 def test_validation_raises(test_input, expected):
     with pytest.raises(expected):
         carbon_intensity.validate(test_input)
+
+def test_build_source():
+    assert carbon_intensity.build_url(source, dt) == "https://api.carbonintensity.org.uk/intensity/date/2026-08-07"

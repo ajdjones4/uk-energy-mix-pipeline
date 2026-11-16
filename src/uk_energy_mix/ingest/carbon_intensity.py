@@ -30,6 +30,9 @@ def file_path(dt: datetime.date) -> Path:
     filepath = ROOT_DIR / "data" / "raw" / SOURCE_NAME / f"{dt}.json"
     return filepath
 
+def build_url(source: str, dt: datetime.date) -> str:
+    url = f"{source}/{dt}"
+    return url
 
 @retry(
     stop=stop_after_attempt(3),

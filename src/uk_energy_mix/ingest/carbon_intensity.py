@@ -15,7 +15,7 @@ from tenacity import (
     wait_random_exponential,
 )
 
-from uk_energy_mix.ingest.config import ROOT_DIR
+from uk_energy_mix.config import ROOT_DIR
 from uk_energy_mix.ingest import http
 
 SOURCE_NAME = "carbon_intensity"

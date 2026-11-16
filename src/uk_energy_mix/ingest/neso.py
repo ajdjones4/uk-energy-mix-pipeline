@@ -17,7 +17,7 @@ from tenacity import (
 )
 
 from uk_energy_mix.ingest.config import ROOT_DIR
-from uk_energy_mix.ingest.http import is_retryable_error
+from uk_energy_mix.ingest import http
 
 SOURCE_NAME = "neso"
 SOURCE_URL = "https://api.neso.energy/api/3/action/datastore_search_sql"
@@ -93,18 +93,14 @@ def date_window(
     return (start_date, end_date)
 
 
-@retry(
+fetch = retry(
     stop=stop_after_attempt(3),
     wait=wait_fixed(RATE_LIMIT),
-    retry=retry_if_exception(is_retryable_error),
+    retry=retry_if_exception(http.is_retryable_error),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True,
-)
-def fetch(source: str, headers: dict | None = None, params: dict | None = None) -> str:
-    """Make the API call, return the json as raw text"""
-    response = requests.get(source, headers=headers, params=params, timeout=10)
-    response.raise_for_status()
-    return response.text
+)(http.fetch)
+
 
 
 def expected_records(

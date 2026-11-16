@@ -19,6 +19,7 @@ from uk_energy_mix.config import ROOT_DIR
 from uk_energy_mix.ingest import http
 from uk_energy_mix.storage import write, file_path
 from uk_energy_mix.log_config import setup_logging
+from uk_energy_mix.exceptions import PayloadValidationError
 
 SOURCE_NAME = "carbon_intensity"
 SOURCE_URL = "https://api.carbonintensity.org.uk/intensity/date"
@@ -44,12 +45,12 @@ def validate(text: str) -> int:
     """Check that what we fetch is what we want before we write it to a file"""
     payload = json.loads(text)
     if not isinstance(payload, dict):
-        raise TypeError(f"Fetched object is of type {type(payload).__name__}")
+        raise PayloadValidationError(f"Fetched object is of type {type(payload).__name__}")
     if "data" not in payload:
-        raise ValueError(f"Fetched object has keys {list(payload)}")
+        raise PayloadValidationError(f"Fetched object has keys {list(payload)}")
     count = len(payload["data"])
     if count not in {46, 48, 50}:
-        raise ValueError(f"Fetched object is of length {count}")
+        raise PayloadValidationError(f"Fetched object is of length {count}")
     return count
 
 

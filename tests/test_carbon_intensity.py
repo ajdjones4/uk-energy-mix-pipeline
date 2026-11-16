@@ -8,6 +8,7 @@ import responses
 from tenacity import wait_none
 
 from uk_energy_mix.ingest import carbon_intensity
+from uk_energy_mix.exceptions import PayloadValidationError
 
 dt = datetime.date.fromisoformat("2026-08-07")
 source = carbon_intensity.SOURCE_URL
@@ -55,9 +56,9 @@ def test_validation_pass():
     ("test_input", "expected"),
     [
         (BAD_PAYLOAD, json.JSONDecodeError),
-        ("[]", TypeError),
-        ('{"foo": []}', ValueError),
-        (json.dumps({"data": [{}] * 12}), ValueError),
+        ("[]", PayloadValidationError),
+        ('{"foo": []}', PayloadValidationError),
+        (json.dumps({"data": [{}] * 12}), PayloadValidationError),
     ],
 )
 def test_validation_raises(test_input, expected):

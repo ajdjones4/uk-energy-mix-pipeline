@@ -21,6 +21,7 @@ from uk_energy_mix.ingest import http
 from uk_energy_mix.storage import write, file_path
 from uk_energy_mix.dates import date_window, expected_records
 from uk_energy_mix.log_config import setup_logging
+from uk_energy_mix.exceptions import PayloadValidationError
 
 SOURCE_NAME = "neso"
 SOURCE_URL = "https://api.neso.energy/api/3/action/datastore_search_sql"
@@ -75,21 +76,21 @@ def validate(text: str) -> int:
     try:
         payload = json.loads(text)
     except json.JSONDecodeError as err:
-        raise ValueError("NESO payload wasn't valid JSON") from err
+        raise PayloadValidationError("NESO payload wasn't valid JSON") from err
     if not isinstance(payload, dict):
-        raise TypeError(f"Fetched object is of type {type(payload).__name__}")
+        raise PayloadValidationError(f"Fetched object is of type {type(payload).__name__}")
     if "success" not in payload:
-        raise ValueError(f"Fetched object has keys {list(payload)}")
+        raise PayloadValidationError(f"Fetched object has keys {list(payload)}")
     if not payload["success"]:
         error_message = payload.get("error", "no error message returned")
-        raise ValueError(f"Payload return failed with error message: {error_message}")
+        raise PayloadValidationError(f"Payload return failed with error message: {error_message}")
     if "result" not in payload:
-        raise ValueError("Payload missing results")
+        raise PayloadValidationError("Payload missing results")
     if "records" not in payload["result"]:
-        raise ValueError("Payload results missing records")
+        raise PayloadValidationError("Payload results missing records")
     records = payload["result"]["records"]
     if not isinstance(records, list):
-        raise TypeError(
+        raise PayloadValidationError(
             "Returned records object is of type "
             f"{type(records).__name__}, should be list."
         )

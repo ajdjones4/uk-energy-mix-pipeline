@@ -7,6 +7,7 @@ import responses
 from tenacity import wait_none
 
 from uk_energy_mix.ingest import neso
+from uk_energy_mix.exceptions import PayloadValidationError
 
 SNAPSHOT_DATE = datetime.date.fromisoformat("2026-11-12")
 DATE_FROM = datetime.date.fromisoformat("2026-10-25")
@@ -108,13 +109,13 @@ def test_validation_pass(test_input, expected):
 @pytest.mark.parametrize(
     ("test_input", "expected"),
     [
-        ("not json at all", ValueError),
-        ("[]", TypeError),
-        ('{"help": "https://example"}', ValueError),
-        ('{"success": false}', ValueError),
-        ('{"success": true}', ValueError),
-        ('{"success": true, "result": {}}', ValueError),
-        ('{"success": true, "result": {"records": "oops"}}', TypeError),
+        ("not json at all", PayloadValidationError),
+        ("[]", PayloadValidationError),
+        ('{"help": "https://example"}', PayloadValidationError),
+        ('{"success": false}', PayloadValidationError),
+        ('{"success": true}', PayloadValidationError),
+        ('{"success": true, "result": {}}', PayloadValidationError),
+        ('{"success": true, "result": {"records": "oops"}}', PayloadValidationError),
     ],
 )
 def test_validation_raises(test_input, expected):
@@ -123,7 +124,7 @@ def test_validation_raises(test_input, expected):
 
 
 def test_validate_CKAN_error():
-    with pytest.raises(ValueError, match="does not exist"):
+    with pytest.raises(PayloadValidationError, match="does not exist"):
         neso.validate(PAYLOAD_409)
 
 

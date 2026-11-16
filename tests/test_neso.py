@@ -154,23 +154,32 @@ def test_validate_CKAN_error():
 def test_expected_records(date_from, date_to, timezone, expected):
     assert neso.expected_records(date_from, date_to, timezone) == expected
 
+
 @pytest.mark.parametrize(
-        ("window", "start_date", "end_date", "expected"),
-        [
-            (10, None, datetime.date(2026, 11, 10), (datetime.date(2026, 11, 1), datetime.date(2026, 11, 10))),
-            (10, datetime.date(2026, 11, 10), None, (datetime.date(2026, 11, 10), datetime.date(2026, 11, 11))),
-            (10, None, None, (datetime.date(2026, 11, 2), datetime.date(2026, 11, 11))),
-            (10, datetime.date(2026, 10, 25), datetime.date(2026, 10, 30), (datetime.date(2026, 10, 25), datetime.date(2026, 10, 30))),
-            (1, None, None, (datetime.date(2026, 11, 11), datetime.date(2026, 11, 11)))
-        
-        ],
-        ids=[
-            "no-start",
-            "no-end",
-            "no-given-dates",
-            "given-both-dates",
-            "window-length-1"
-        ]
+    ("window", "start_date", "end_date", "expected"),
+    [
+        (
+            10,
+            None,
+            datetime.date(2026, 11, 10),
+            (datetime.date(2026, 11, 1), datetime.date(2026, 11, 10)),
+        ),
+        (
+            10,
+            datetime.date(2026, 11, 10),
+            None,
+            (datetime.date(2026, 11, 10), datetime.date(2026, 11, 11)),
+        ),
+        (10, None, None, (datetime.date(2026, 11, 2), datetime.date(2026, 11, 11))),
+        (
+            10,
+            datetime.date(2026, 10, 25),
+            datetime.date(2026, 10, 30),
+            (datetime.date(2026, 10, 25), datetime.date(2026, 10, 30)),
+        ),
+        (1, None, None, (datetime.date(2026, 11, 11), datetime.date(2026, 11, 11))),
+    ],
+    ids=["no-start", "no-end", "no-given-dates", "given-both-dates", "window-length-1"],
 )
 def test_date_window(window, start_date, end_date, expected):
     assert neso.date_window(SNAPSHOT_DATE, window, start_date, end_date) == expected

@@ -4,7 +4,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from time import perf_counter
+from time import perf_counter, gmtime
 
 import requests
 from tenacity import (
@@ -64,16 +64,15 @@ def write(data: str, filepath: Path) -> None:
     logger.info("Written %s chars to %s", len(data), filepath)
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "date",
         nargs="?",
         type=datetime.date.fromisoformat,
-        default=datetime.date.today(),
+        default=datetime.datetime.now(datetime.UTC).date(),
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     dt = args.date
     logger.info("Fetching carbon intensity data for %s", dt)
     try:
@@ -91,4 +90,17 @@ if __name__ == "__main__":
                     elapsed)
     except Exception:
         logger.exception("Ingestion failed for %s", dt)
-        sys.exit(1)
+        return 1
+    return 0
+    
+
+if __name__ == "__main__":
+    logging.Formatter.converter = gmtime
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%SZ",
+    )
+    code = main()
+    sys.exit(code)
+

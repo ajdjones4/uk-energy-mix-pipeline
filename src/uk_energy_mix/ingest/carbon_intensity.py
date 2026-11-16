@@ -43,13 +43,8 @@ def build_url(source: str, dt: datetime.date) -> str:
 )
 def fetch(source: str, dt: datetime.date, headers: dict | None = None) -> str:
     """Make the API call, return the json as raw text"""
-    logger.info("Fetching data from: %s/%s", source, dt)
-    start = perf_counter()
     response = requests.get(f"{source}/{dt}", headers=headers, timeout=10)
-    end = perf_counter()
-    elapsed = end - start
     response.raise_for_status()
-    logger.info("Fetched %s chars in %.2fs", len(response.text), elapsed)
     return response.text
 
 
@@ -87,11 +82,17 @@ if __name__ == "__main__":
     dt = args.date
     logger.info("Fetching carbon intensity data for %s", dt)
     try:
+        t0 = perf_counter()
         r = fetch(SOURCE_URL, dt, HEADERS)
         count = validate(r)
-        logger.info("Validated %s: %s records", dt, count)
         target = file_path(dt)
         write(r, target)
+        t_end = perf_counter()
+        elapsed = t_end - t0
+        logger.info("Successfully fetched and wrote %s records from %s in %.2fs",
+                    count,
+                    url,
+                    elapsed)
     except Exception:
         logger.exception("Ingestion failed for %s", dt)
         sys.exit(1)

@@ -20,6 +20,7 @@ from uk_energy_mix.config import ROOT_DIR
 from uk_energy_mix.ingest import http
 from uk_energy_mix.storage import write, file_path
 from uk_energy_mix.dates import date_window, expected_records
+from uk_energy_mix.log_config import setup_logging
 
 SOURCE_NAME = "neso"
 SOURCE_URL = "https://api.neso.energy/api/3/action/datastore_search_sql"
@@ -180,11 +181,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    logging.Formatter.converter = gmtime
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%SZ",
-    )
+    setup_logging()
     code = main()
     sys.exit(code)

@@ -18,6 +18,7 @@ from tenacity import (
 from uk_energy_mix.config import ROOT_DIR
 from uk_energy_mix.ingest import http
 from uk_energy_mix.storage import write, file_path
+from uk_energy_mix.log_config import setup_logging
 
 SOURCE_NAME = "carbon_intensity"
 SOURCE_URL = "https://api.carbonintensity.org.uk/intensity/date"
@@ -84,12 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     
 
 if __name__ == "__main__":
-    logging.Formatter.converter = gmtime
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%SZ",
-    )
+    setup_logging()
     code = main()
     sys.exit(code)
 

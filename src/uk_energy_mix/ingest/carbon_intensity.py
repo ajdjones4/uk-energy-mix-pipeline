@@ -17,6 +17,7 @@ from tenacity import (
 
 from uk_energy_mix.config import ROOT_DIR
 from uk_energy_mix.ingest import http
+from uk_energy_mix.storage import write
 
 SOURCE_NAME = "carbon_intensity"
 SOURCE_URL = "https://api.carbonintensity.org.uk/intensity/date"
@@ -54,14 +55,6 @@ def validate(text: str) -> int:
     if count not in {46, 48, 50}:
         raise ValueError(f"Fetched object is of length {count}")
     return count
-
-
-def write(data: str, filepath: Path) -> None:
-    """Create parent directory if necessary and write text to file"""
-    filepath.parent.mkdir(parents=True, exist_ok=True)
-    with open(filepath, "w", encoding="utf-8") as file:
-        file.write(data)
-    logger.info("Written %s chars to %s", len(data), filepath)
 
 
 def main(argv: list[str] | None = None) -> int:

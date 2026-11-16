@@ -75,7 +75,19 @@ def build_query(
     )
     return sql_query
 
+def date_window(run_date: datetime.date,
+                window: int,
+                start_date: datetime.date | None = None, 
+                end_date: datetime.date | None = None) -> tuple[datetime.date, datetime.date]:
+    """Take the run date, window length and parsed dates. If dates are empty return default date range.
+       Default end date is yesterday and default start date is the window length before the end date"""
+    if end_date is None:
+        end_date = run_date - datetime.timedelta(days=1)
+    if start_date is None:
+        start_date = end_date - datetime.timedelta(days=(window - 1))
+    return (start_date, end_date)
 
+    
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_fixed(RATE_LIMIT),
@@ -175,12 +187,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     datasets = args.datasets
-    start_date = args.start
-    end_date = args.end
-    if end_date is None:
-        end_date = run_date - datetime.timedelta(days=1)
-    if start_date is None:
-        start_date = end_date - datetime.timedelta(days=(TRAILING_WINDOW - 1))
+    start_date, end_date = date_window(run_date, TRAILING_WINDOW, args.start, args.end)
     if start_date > end_date:
         parser.error("Start date cannot be after the end date.")
     failures = []

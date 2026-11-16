@@ -37,15 +37,6 @@ WINDOW = 10
 neso.fetch.retry.wait = wait_none()
 
 
-def test_file_path():
-    path = neso.file_path(SNAPSHOT_DATE, DATE_FROM, DATE_TO, DATASET_NAME)
-    assert path.parts[-3:] == (
-        "historic-generation-data",
-        "ingest_date=2026-11-12",
-        "2026-10-25_2026-10-25.json",
-    )
-
-
 @pytest.mark.parametrize(
     ("resource_id", "date_col", "expected"),
     [

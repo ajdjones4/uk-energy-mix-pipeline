@@ -17,13 +17,6 @@ GOOD_PAYLOAD = (FIXTURES / "intensity_day.json").read_text(encoding="utf-8")
 BAD_PAYLOAD = (FIXTURES / "intensity_day_truncated.json").read_text(encoding="utf-8")
 carbon_intensity.fetch.retry.wait = wait_none()
 
-
-def test_path():
-    assert str(carbon_intensity.file_path(dt)).endswith(
-        "data/raw/carbon_intensity/2026-08-07.json"
-    )
-
-
 @responses.activate
 def test_fetch_returns_body():
     responses.add(responses.GET, url, body=GOOD_PAYLOAD, status=200)

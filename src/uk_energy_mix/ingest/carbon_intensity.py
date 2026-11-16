@@ -43,7 +43,10 @@ fetch = retry(
 
 def validate(text: str) -> int:
     """Check that what we fetch is what we want before we write it to a file"""
-    payload = json.loads(text)
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError as err:
+        raise PayloadValidationError("Carbon Intensity payload wasn't valid JSON")
     if not isinstance(payload, dict):
         raise PayloadValidationError(f"Fetched object is of type {type(payload).__name__}")
     if "data" not in payload:

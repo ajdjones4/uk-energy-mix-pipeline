@@ -55,7 +55,7 @@ def test_validation_pass():
 @pytest.mark.parametrize(
     ("test_input", "expected"),
     [
-        (BAD_PAYLOAD, json.JSONDecodeError),
+        (BAD_PAYLOAD, PayloadValidationError),
         ("[]", PayloadValidationError),
         ('{"foo": []}', PayloadValidationError),
         (json.dumps({"data": [{}] * 12}), PayloadValidationError),

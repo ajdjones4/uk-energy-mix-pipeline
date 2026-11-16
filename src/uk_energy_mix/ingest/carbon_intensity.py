@@ -16,7 +16,7 @@ from tenacity import (
 )
 
 from uk_energy_mix.ingest.config import ROOT_DIR
-from uk_energy_mix.ingest.http import is_retryable_error
+from uk_energy_mix.ingest import http
 
 SOURCE_NAME = "carbon_intensity"
 SOURCE_URL = "https://api.carbonintensity.org.uk/intensity/date"
@@ -34,18 +34,13 @@ def build_url(source: str, dt: datetime.date) -> str:
     url = f"{source}/{dt}"
     return url
 
-@retry(
+fetch = retry(
     stop=stop_after_attempt(3),
     wait=wait_random_exponential(multiplier=1, max=30),
-    retry=retry_if_exception(is_retryable_error),
+    retry=retry_if_exception(http.is_retryable_error),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True,
-)
-def fetch(source: str, dt: datetime.date, headers: dict | None = None) -> str:
-    """Make the API call, return the json as raw text"""
-    response = requests.get(f"{source}/{dt}", headers=headers, timeout=10)
-    response.raise_for_status()
-    return response.text
+)(http.fetch)
 
 
 def validate(text: str) -> int:
@@ -83,7 +78,8 @@ if __name__ == "__main__":
     logger.info("Fetching carbon intensity data for %s", dt)
     try:
         t0 = perf_counter()
-        r = fetch(SOURCE_URL, dt, HEADERS)
+        url = build_url(SOURCE_URL, dt)
+        r = fetch(url, HEADERS)
         count = validate(r)
         target = file_path(dt)
         write(r, target)

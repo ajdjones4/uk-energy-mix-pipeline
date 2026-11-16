@@ -12,6 +12,7 @@ from uk_energy_mix.ingest import carbon_intensity
 CONTENT = "Hello World"
 dt = datetime.date.fromisoformat("2026-08-07")
 source = carbon_intensity.SOURCE_URL
+url = f"{source}/{dt}"
 FIXTURES = Path(__file__).parent / "fixtures" / "carbon_intensity"
 GOOD_PAYLOAD = (FIXTURES / "intensity_day.json").read_text(encoding="utf-8")
 BAD_PAYLOAD = (FIXTURES / "intensity_day_truncated.json").read_text(encoding="utf-8")
@@ -40,41 +41,31 @@ def test_write_idempotency(tmp_path):
 
 @responses.activate
 def test_fetch_returns_body():
-    responses.add(responses.GET, f"{source}/{dt}", body=GOOD_PAYLOAD, status=200)
-    assert carbon_intensity.fetch(source, dt) == GOOD_PAYLOAD
-
-
-@responses.activate
-def test_fetch_constructs_correct_url():
-    responses.add(responses.GET, f"{source}/{dt}", body=GOOD_PAYLOAD, status=200)
-    carbon_intensity.fetch(source, dt)
-    assert (
-        responses.calls[0].request.url
-        == "https://api.carbonintensity.org.uk/intensity/date/2026-08-07"
-    )
+    responses.add(responses.GET, url, body=GOOD_PAYLOAD, status=200)
+    assert carbon_intensity.fetch(url) == GOOD_PAYLOAD
 
 
 @responses.activate
 def test_fetch_raises_on_404():
-    responses.add(responses.GET, f"{source}/{dt}", status=404)
+    responses.add(responses.GET, url, status=404)
     with pytest.raises(requests.HTTPError):
-        carbon_intensity.fetch(source, dt)
+        carbon_intensity.fetch(url)
     assert len(responses.calls) == 1
 
 
 @responses.activate
 def test_fetch_timeout():
-    responses.add(responses.GET, f"{source}/{dt}", body=requests.Timeout())
+    responses.add(responses.GET, url, body=requests.Timeout())
     with pytest.raises(requests.Timeout):
-        carbon_intensity.fetch(source, dt)
+        carbon_intensity.fetch(url)
     assert len(responses.calls) == 3
 
 
 @responses.activate
 def test_fetch_retries_503():
-    responses.add(responses.GET, f"{source}/{dt}", status=503)
+    responses.add(responses.GET, url, status=503)
     with pytest.raises(requests.HTTPError):
-        carbon_intensity.fetch(source, dt)
+        carbon_intensity.fetch(url)
     assert len(responses.calls) == 3
 
 

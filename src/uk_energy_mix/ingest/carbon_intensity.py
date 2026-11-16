@@ -17,19 +17,14 @@ from tenacity import (
 
 from uk_energy_mix.config import ROOT_DIR
 from uk_energy_mix.ingest import http
-from uk_energy_mix.storage import write
+from uk_energy_mix.storage import write, file_path
 
 SOURCE_NAME = "carbon_intensity"
 SOURCE_URL = "https://api.carbonintensity.org.uk/intensity/date"
+DATASET = "national-intensity"
 HEADERS = {"Accept": "application/json"}
 
 logger = logging.getLogger(__name__)
-
-
-def file_path(dt: datetime.date) -> Path:
-    """Generate the file path based on the data source and given date"""
-    filepath = ROOT_DIR / "data" / "raw" / SOURCE_NAME / f"{dt}.json"
-    return filepath
 
 def build_url(source: str, dt: datetime.date) -> str:
     url = f"{source}/{dt}"
@@ -58,12 +53,13 @@ def validate(text: str) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    run_date = datetime.datetime.now(datetime.UTC).date()
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "date",
         nargs="?",
         type=datetime.date.fromisoformat,
-        default=datetime.datetime.now(datetime.UTC).date(),
+        default=run_date,
     )
     args = parser.parse_args(argv)
     dt = args.date
@@ -73,7 +69,7 @@ def main(argv: list[str] | None = None) -> int:
         url = build_url(SOURCE_URL, dt)
         r = fetch(url, HEADERS)
         count = validate(r)
-        target = file_path(dt)
+        target = file_path(SOURCE_NAME, run_date, dt, dt, DATASET)
         write(r, target)
         t_end = perf_counter()
         elapsed = t_end - t0

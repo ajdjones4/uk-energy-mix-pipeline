@@ -18,7 +18,7 @@ from tenacity import (
 
 from uk_energy_mix.config import ROOT_DIR
 from uk_energy_mix.ingest import http
-from uk_energy_mix.storage import write
+from uk_energy_mix.storage import write, file_path
 
 SOURCE_NAME = "neso"
 SOURCE_URL = "https://api.neso.energy/api/3/action/datastore_search_sql"
@@ -43,25 +43,6 @@ TRAILING_WINDOW = 35  # days
 RATE_LIMIT = 30  # seconds
 
 logger = logging.getLogger(__name__)
-
-
-def file_path(
-    snapshot_date: datetime.date,
-    dt_from: datetime.date,
-    dt_to: datetime.date,
-    dataset: str,
-) -> Path:
-    """Generate the file path based on the data source and snapshot date"""
-    filepath = (
-        ROOT_DIR
-        / "data"
-        / "raw"
-        / SOURCE_NAME
-        / dataset
-        / f"ingest_date={snapshot_date}"
-        / f"{dt_from}_{dt_to}.json"
-    )
-    return filepath
 
 
 def build_query(
@@ -194,7 +175,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         try:
             t0 = perf_counter()
-            target = file_path(run_date, start_date, end_date, name)
+            target = file_path(SOURCE_NAME, run_date, start_date, end_date, name)
             sql_query = build_query(
                 cfg["resource_id"], cfg["datecol"], start_date, end_date
             )

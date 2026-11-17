@@ -59,13 +59,13 @@ def validate(text: str) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    run_date = datetime.datetime.now(datetime.UTC).date()
+    snapshot_date = datetime.datetime.now(datetime.UTC).date()
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "date",
         nargs="?",
         type=datetime.date.fromisoformat,
-        default=run_date,
+        default=snapshot_date,
     )
     args = parser.parse_args(argv)
     dt = args.date
@@ -75,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
         url = build_url(SOURCE_URL, dt)
         r = fetch(url, HEADERS)
         count = validate(r)
-        target = file_path(SOURCE_NAME, run_date, dt, dt, DATASET)
+        target = file_path(SOURCE_NAME, snapshot_date, dt, dt, DATASET)
         write(r, target)
         t_end = perf_counter()
         elapsed = t_end - t0

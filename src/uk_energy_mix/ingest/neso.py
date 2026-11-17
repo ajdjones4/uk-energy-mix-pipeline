@@ -95,7 +95,7 @@ def validate(text: str) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     """Ingest NESO data to raw layer for given dataset/date range."""
-    run_date = datetime.datetime.now(datetime.UTC).date()
+    snapshot_date = datetime.datetime.now(datetime.UTC).date()
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--datasets",
@@ -119,12 +119,12 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help=(
             "End date (inclusive) for the data you want to fetch. "
-            f"Default is {run_date - datetime.timedelta(days=1)}"
+            f"Default is {snapshot_date - datetime.timedelta(days=1)}"
         ),
     )
     args = parser.parse_args(argv)
     datasets = args.datasets
-    start_date, end_date = date_window(run_date, TRAILING_WINDOW, args.start, args.end)
+    start_date, end_date = date_window(snapshot_date, TRAILING_WINDOW, args.start, args.end)
     if start_date > end_date:
         parser.error("Start date cannot be after the end date.")
     failures = []
@@ -133,11 +133,15 @@ def main(argv: list[str] | None = None) -> int:
         if i > 0:
             sleep(RATE_LIMIT)
         logger.info(
-            "Fetching data from %s %s - %s on %s", name, start_date, end_date, run_date
+            "Fetching data from %s %s - %s on %s", 
+            name, 
+            start_date, 
+            end_date, 
+            snapshot_date
         )
         try:
             t0 = perf_counter()
-            target = file_path(SOURCE_NAME, run_date, start_date, end_date, name)
+            target = file_path(SOURCE_NAME, snapshot_date, start_date, end_date, name)
             sql_query = build_query(
                 cfg["resource_id"], cfg["datecol"], start_date, end_date
             )

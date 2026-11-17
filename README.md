@@ -6,12 +6,12 @@ UK Energy Mix Pipeline Portfolio Project. A project building an end-to-end data 
 
 ### Done
 
-First ingestion script (carbon intensity) written in Python with associated tests to fetch JSON data from the NESO Carbon Intensity API. Uses requests to fetch data, retries with tenacity, a validation gate that checks each payload before it is written, argparse for the CLI, and logging. A bash backfill script fetches historic data.
+Ingestion scripts written in Python with associated tests to fetch JSON data from the NESO Carbon Intensity API and the NESO Data Portal API (CKAN & Datastore API). Uses requests to fetch data, retries with tenacity, a validation gate that checks each payload before it is written, argparse for the CLI, and logging. A bash backfill script fetches historic data for the Carbon Intensity API while the NESO Data Portal accepts a range of dates (both ends inclusive).
 
 ### Next
 
+- Carbon Intensity API date range
 - Elexon API
-- NESO Data Portal API
 - DuckDB transformations
 
 ## Data Sources
@@ -19,6 +19,7 @@ First ingestion script (carbon intensity) written in Python with associated test
 | Source | Endpoint | Grain | Refresh cadence | Licence |
 |---|---|---|---|---|
 | NESO Carbon Intensity | `api.carbonintensity.org.uk/intensity/date/{date}` | Half-hourly | TBD | "Carbon Intensity API" by NESO, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| NESO Data Portal | `api.neso.energy/api/3/action/datastore_search_sql` | Half-hourly | TBD | "NESO Data Portal " by NESO [National Energy SO Open Data Licence v1.0](https://www.neso.energy/data-portal/neso-open-licence) | 
 
 ## Design Notes
 

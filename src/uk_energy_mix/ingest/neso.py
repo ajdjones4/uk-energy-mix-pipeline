@@ -3,11 +3,8 @@ import datetime
 import json
 import logging
 import sys
-from pathlib import Path
-from time import gmtime, perf_counter, sleep
-from zoneinfo import ZoneInfo
+from time import perf_counter, sleep
 
-import requests
 from tenacity import (
     before_sleep_log,
     retry,
@@ -16,29 +13,28 @@ from tenacity import (
     wait_fixed,
 )
 
-from uk_energy_mix.config import ROOT_DIR
-from uk_energy_mix.ingest import http
-from uk_energy_mix.storage import write, file_path
 from uk_energy_mix.dates import date_window, expected_records
-from uk_energy_mix.log_config import setup_logging
 from uk_energy_mix.exceptions import PayloadValidationError
+from uk_energy_mix.ingest import http
+from uk_energy_mix.log_config import setup_logging
+from uk_energy_mix.storage import file_path, write
 
 SOURCE_NAME = "neso"
 SOURCE_URL = "https://api.neso.energy/api/3/action/datastore_search_sql"
 DATASETS = {
     "historic-generation-mix": {
         "resource_id": "f93d1835-75bc-43e5-84ad-12472b180a98",
-        "datecol": "DATETIME",
+        "date_col": "DATETIME",
         "date_tz": "UTC",
     },
     "historic-demand-data": {
         "resource_id": "8a4a771c-3929-4e56-93ad-cdf13219dea5",
-        "datecol": "SETTLEMENT_DATE",
+        "date_col": "SETTLEMENT_DATE",
         "date_tz": "Europe/London",
     },
     "demand-data-update": {
         "resource_id": "177f6fa4-ae49-4182-81ea-0c6b35f26ca6",
-        "datecol": "SETTLEMENT_DATE",
+        "date_col": "SETTLEMENT_DATE",
         "date_tz": "Europe/London",
     },
 }
@@ -49,14 +45,14 @@ logger = logging.getLogger(__name__)
 
 
 def build_query(
-    resource_id: str, date_col: str, dt_from: datetime.date, dt_to: datetime.date
+    resource_id: str, date_col: str, start_date: datetime.date, end_date: datetime.date
 ) -> str:
-    """Build the SQL query to retrieve desired data from CKAN API, end date inclusive"""
-    dt_end_exclusive = dt_to + datetime.timedelta(days=1)
+    """Build the SQL query to query CKAN API, end date inclusive"""
+    end_date_exclusive = end_date + datetime.timedelta(days=1)
     sql_query = (
         f'''SELECT * FROM "{resource_id}" '''
-        f'''WHERE "{date_col}" >= '{dt_from}' '''
-        f'''AND "{date_col}" < '{dt_end_exclusive}' '''
+        f'''WHERE "{date_col}" >= '{start_date}' '''
+        f'''AND "{date_col}" < '{end_date_exclusive}' '''
     )
     return sql_query
 
@@ -71,8 +67,7 @@ fetch = retry(
 
 
 def validate(text: str) -> int:
-    """Check that the payload is structurally correct before we write it to file.
-    Return number of records"""
+    """Validate payload structure and return number of records"""
     try:
         payload = json.loads(text)
     except json.JSONDecodeError as err:

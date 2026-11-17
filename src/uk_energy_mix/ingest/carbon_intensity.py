@@ -3,10 +3,8 @@ import datetime
 import json
 import logging
 import sys
-from pathlib import Path
-from time import perf_counter, gmtime
+from time import perf_counter
 
-import requests
 from tenacity import (
     before_sleep_log,
     retry,
@@ -15,11 +13,10 @@ from tenacity import (
     wait_random_exponential,
 )
 
-from uk_energy_mix.config import ROOT_DIR
-from uk_energy_mix.ingest import http
-from uk_energy_mix.storage import write, file_path
-from uk_energy_mix.log_config import setup_logging
 from uk_energy_mix.exceptions import PayloadValidationError
+from uk_energy_mix.ingest import http
+from uk_energy_mix.log_config import setup_logging
+from uk_energy_mix.storage import file_path, write
 
 SOURCE_NAME = "carbon_intensity"
 SOURCE_URL = "https://api.carbonintensity.org.uk/intensity/date"
@@ -29,6 +26,7 @@ HEADERS = {"Accept": "application/json"}
 logger = logging.getLogger(__name__)
 
 def build_url(source: str, dt: datetime.date) -> str:
+    """Build URL to query REST API"""
     url = f"{source}/{dt}"
     return url
 
@@ -42,15 +40,18 @@ fetch = retry(
 
 
 def validate(text: str) -> int:
-    """Check that what we fetch is what we want before we write it to a file"""
+    """Validate structure of payload and return number of records"""
     try:
         payload = json.loads(text)
     except json.JSONDecodeError as err:
-        raise PayloadValidationError("Carbon Intensity payload wasn't valid JSON")
+        raise PayloadValidationError(
+            "Carbon Intensity payload wasn't valid JSON") from err
     if not isinstance(payload, dict):
-        raise PayloadValidationError(f"Fetched object is of type {type(payload).__name__}")
+        raise PayloadValidationError("Fetched object is of type "
+                                    f"{type(payload).__name__}")
     if "data" not in payload:
-        raise PayloadValidationError(f"Fetched object has keys {list(payload)}")
+        raise PayloadValidationError("Fetched object has keys "
+                                    f"{list(payload)}")
     count = len(payload["data"])
     if count not in {46, 48, 50}:
         raise PayloadValidationError(f"Fetched object is of length {count}")

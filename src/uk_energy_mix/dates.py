@@ -1,6 +1,7 @@
 import datetime
 from zoneinfo import ZoneInfo
 
+
 def date_window(
     run_date: datetime.date,
     window: int,
@@ -19,18 +20,18 @@ def date_window(
 
 
 def expected_records(
-    dt_from: datetime.date, dt_to: datetime.date, timezone: str
+    start_date: datetime.date, end_date: datetime.date, date_tz: str
 ) -> int:
     """Calculate the number of 30 minute intervals in the given date range"""
-    dt_to_exclusive = dt_to + datetime.timedelta(days=1)
-    dt_from_local = datetime.datetime.combine(
-        dt_from, time=datetime.time.min, tzinfo=ZoneInfo(timezone)
+    end_date_exclusive = end_date + datetime.timedelta(days=1)
+    start_date_local = datetime.datetime.combine(
+        start_date, time=datetime.time.min, tzinfo=ZoneInfo(date_tz)
     )
-    dt_to_exclusive_local = datetime.datetime.combine(
-        dt_to_exclusive, time=datetime.time.min, tzinfo=ZoneInfo(timezone)
+    end_date_exclusive_local = datetime.datetime.combine(
+        end_date_exclusive, time=datetime.time.min, tzinfo=ZoneInfo(date_tz)
     )
-    dt_from_utc = dt_from_local.astimezone(datetime.UTC)
-    dt_to_exclusive_utc = dt_to_exclusive_local.astimezone(datetime.UTC)
+    dt_from_utc = start_date_local.astimezone(datetime.UTC)
+    dt_to_exclusive_utc = end_date_exclusive_local.astimezone(datetime.UTC)
     interval = dt_to_exclusive_utc - dt_from_utc
     periods = interval / datetime.timedelta(minutes=30)
     return int(periods)

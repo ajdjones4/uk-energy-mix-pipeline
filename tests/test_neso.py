@@ -6,8 +6,8 @@ import requests
 import responses
 from tenacity import wait_none
 
-from uk_energy_mix.ingest import neso
 from uk_energy_mix.exceptions import PayloadValidationError
+from uk_energy_mix.ingest import neso
 
 SNAPSHOT_DATE = datetime.date.fromisoformat("2026-11-12")
 DATE_FROM = datetime.date.fromisoformat("2026-10-25")

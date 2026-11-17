@@ -1,5 +1,7 @@
 import datetime
+
 import pytest
+
 from uk_energy_mix import dates
 
 SNAPSHOT_DATE = datetime.date.fromisoformat("2026-11-12")

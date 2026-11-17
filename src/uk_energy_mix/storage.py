@@ -1,6 +1,6 @@
-from pathlib import Path
-import logging
 import datetime
+import logging
+from pathlib import Path
 
 from uk_energy_mix.config import ROOT_DIR
 
@@ -20,7 +20,7 @@ def file_path(
     dt_to: datetime.date,
     dataset: str,
 ) -> Path:
-    """Generate the file path based on the data source and snapshot date"""
+    """Generate the file path for storing the payload"""
     filepath = (
         ROOT_DIR
         / "data"

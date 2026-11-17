@@ -7,8 +7,8 @@ import requests
 import responses
 from tenacity import wait_none
 
-from uk_energy_mix.ingest import carbon_intensity
 from uk_energy_mix.exceptions import PayloadValidationError
+from uk_energy_mix.ingest import carbon_intensity
 
 dt = datetime.date.fromisoformat("2026-08-07")
 source = carbon_intensity.SOURCE_URL

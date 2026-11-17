@@ -1,6 +1,7 @@
 import logging
 from time import gmtime
 
+
 def setup_logging():
     logging.Formatter.converter = gmtime
     logging.basicConfig(

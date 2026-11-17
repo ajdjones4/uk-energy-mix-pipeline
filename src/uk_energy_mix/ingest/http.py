@@ -1,5 +1,6 @@
 import requests
 
+
 def fetch(source: str, headers: dict | None = None, params: dict | None = None) -> str:
     """Make the API call, return the json as raw text"""
     response = requests.get(source, headers=headers, params=params, timeout=10)

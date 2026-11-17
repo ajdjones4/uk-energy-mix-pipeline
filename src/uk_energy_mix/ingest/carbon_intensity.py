@@ -87,12 +87,20 @@ def main(argv: list[str] | None = None) -> int:
         type=datetime.date.fromisoformat,
         default=None,
     )
+    parser.add_argument(
+        "--window",
+        type=int,
+        default=WINDOW
+    )
     args = parser.parse_args(argv)
     dataset = args.datasets
-    start_date, end_date = date_window(snapshot_date, WINDOW, args.start, args.end)
+    window = args.window
+    if not 0 < window <= 14:
+        parser.error("Window must be between 1 and 14 inclusive")
+    start_date, end_date = date_window(snapshot_date, window, args.start, args.end)
     if start_date > end_date:
         parser.error("Start date cannot be after end date")
-    dates = chunk_dates(start_date, end_date, WINDOW)
+    dates = chunk_dates(start_date, end_date, window)
     failures = []
     for i, (start, end) in enumerate(dates):
         if i > 0:
@@ -100,8 +108,8 @@ def main(argv: list[str] | None = None) -> int:
         logger.info(
             "Fetching data from %s %s - %s on %s",
             dataset, 
-            start_date, 
-            end_date, 
+            start, 
+            end, 
             snapshot_date
         )
         try:

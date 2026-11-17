@@ -10,11 +10,12 @@ from tenacity import wait_none
 from uk_energy_mix.exceptions import PayloadValidationError
 from uk_energy_mix.ingest import carbon_intensity
 
-dt = datetime.date.fromisoformat("2026-08-07")
+start_date = datetime.date.fromisoformat("2026-08-07")
+end_date = datetime.date.fromisoformat("2026-08-07")
 source = carbon_intensity.SOURCE_URL
-url = f"{source}/{dt}"
+url = f"{source}/2026-08-07T00:00Z/2026-08-08T00:00Z"
 FIXTURES = Path(__file__).parent / "fixtures" / "carbon_intensity"
-GOOD_PAYLOAD = (FIXTURES / "intensity_day.json").read_text(encoding="utf-8")
+GOOD_PAYLOAD = (FIXTURES / "range_2026-08-07_2026-08-07.json").read_text(encoding="utf-8")
 BAD_PAYLOAD = (FIXTURES / "intensity_day_truncated.json").read_text(encoding="utf-8")
 carbon_intensity.fetch.retry.wait = wait_none()
 
@@ -66,4 +67,6 @@ def test_validation_raises(test_input, expected):
         carbon_intensity.validate(test_input)
 
 def test_build_source():
-    assert carbon_intensity.build_url(source, dt) == "https://api.carbonintensity.org.uk/intensity/date/2026-08-07"
+    assert carbon_intensity.build_url(source, 
+                                      start_date, 
+                                      end_date) == "https://api.carbonintensity.org.uk/intensity/2026-08-07T00:00Z/2026-08-08T00:00Z"

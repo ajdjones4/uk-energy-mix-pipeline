@@ -19,15 +19,18 @@ from uk_energy_mix.log_config import setup_logging
 from uk_energy_mix.storage import file_path, write
 
 SOURCE_NAME = "carbon_intensity"
-SOURCE_URL = "https://api.carbonintensity.org.uk/intensity/date"
+SOURCE_URL = "https://api.carbonintensity.org.uk/intensity"
 DATASET = "national-intensity"
 HEADERS = {"Accept": "application/json"}
 
 logger = logging.getLogger(__name__)
 
-def build_url(source: str, dt: datetime.date) -> str:
-    """Build URL to query REST API"""
-    url = f"{source}/{dt}"
+def build_url(source: str, 
+              start_date: datetime.date, 
+              end_date: datetime.date) -> str:
+    """Build URL to query REST API. Make end date exclusive and both dates ISO8601."""
+    end_date_exclusive = end_date + datetime.timedelta(days=1)
+    url = (f"{source}/{start_date.strftime('%Y-%m-%dT%H:%MZ')}/{end_date_exclusive.strftime('%Y-%m-%dT%H:%MZ')}")
     return url
 
 fetch = retry(

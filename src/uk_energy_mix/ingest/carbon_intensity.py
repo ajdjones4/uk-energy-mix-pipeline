@@ -3,7 +3,7 @@ import datetime
 import json
 import logging
 import sys
-from time import perf_counter
+from time import perf_counter, sleep
 
 from tenacity import (
     before_sleep_log,
@@ -17,18 +17,22 @@ from uk_energy_mix.exceptions import PayloadValidationError
 from uk_energy_mix.ingest import http
 from uk_energy_mix.log_config import setup_logging
 from uk_energy_mix.storage import file_path, write
+from uk_energy_mix.dates import date_window, expected_records, chunk_dates
 
 SOURCE_NAME = "carbon_intensity"
 SOURCE_URL = "https://api.carbonintensity.org.uk/intensity"
 DATASET = "national-intensity"
 HEADERS = {"Accept": "application/json"}
+WINDOW = 1 # day
+RATE_LIMIT = 1
+UTC = "UTC"
 
 logger = logging.getLogger(__name__)
 
 def build_url(source: str, 
               start_date: datetime.date, 
               end_date: datetime.date) -> str:
-    """Build URL to query REST API. Make end date exclusive and both dates ISO8601."""
+    """Build URL to query REST API. Make end date exclusive, start datetime 00:30 and both dates ISO8601."""
     end_date_exclusive = end_date + datetime.timedelta(days=1)
     start_datetime = datetime.datetime.combine(start_date, datetime.time.min, tzinfo=datetime.UTC)
     start_date_corrected = start_datetime + datetime.timedelta(minutes=30)
@@ -61,8 +65,6 @@ def validate(text: str) -> int:
         raise PayloadValidationError("Fetched object has keys "
                                     f"{list(payload)}")
     count = len(payload["data"])
-    if count not in {46, 48, 50}:
-        raise PayloadValidationError(f"Fetched object is of length {count}")
     return count
 
 
@@ -70,29 +72,70 @@ def main(argv: list[str] | None = None) -> int:
     snapshot_date = datetime.datetime.now(datetime.UTC).date()
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "date",
-        nargs="?",
+            "--datasets",
+            nargs="+",
+            default=DATASET,
+            help="Optionally select which datasets you would like to fetch. Default is all",
+        )
+    parser.add_argument(
+        "--start",
         type=datetime.date.fromisoformat,
-        default=snapshot_date,
+        default=None,
+    )
+    parser.add_argument(
+        "--end",
+        type=datetime.date.fromisoformat,
+        default=None,
     )
     args = parser.parse_args(argv)
-    dt = args.date
-    logger.info("Fetching carbon intensity data for %s", dt)
-    try:
-        t0 = perf_counter()
-        url = build_url(SOURCE_URL, dt)
-        r = fetch(url, HEADERS)
-        count = validate(r)
-        target = file_path(SOURCE_NAME, snapshot_date, dt, dt, DATASET)
-        write(r, target)
-        t_end = perf_counter()
-        elapsed = t_end - t0
-        logger.info("Successfully fetched and wrote %s records from %s in %.2fs",
+    dataset = args.datasets
+    start_date, end_date = date_window(snapshot_date, WINDOW, args.start, args.end)
+    if start_date > end_date:
+        parser.error("Start date cannot be after end date")
+    dates = chunk_dates(start_date, end_date, WINDOW)
+    failures = []
+    for i, (start, end) in enumerate(dates):
+        if i > 0:
+            sleep(RATE_LIMIT)
+        logger.info(
+            "Fetching data from %s %s - %s on %s",
+            dataset, 
+            start_date, 
+            end_date, 
+            snapshot_date
+        )
+        try:
+            t0 = perf_counter()
+            url = build_url(SOURCE_URL, start, end)
+            r = fetch(url, HEADERS)
+            expected_count = expected_records(start, end, UTC)
+            count = validate(r)
+            if count != expected_count:
+                logger.warning(
+                    "Expected %s records but fetched %s. From %s, %s - %s",
+                    expected_count,
                     count,
-                    url,
-                    elapsed)
-    except Exception:
-        logger.exception("Ingestion failed for %s", dt)
+                    dataset,
+                    start_date,
+                    end_date,
+                )
+            target = file_path(SOURCE_NAME, snapshot_date, start, end, dataset)
+            write(r, target)
+            t_end = perf_counter()
+            elapsed = t_end - t0
+            logger.info(
+                "Successfully fetched and wrote %s %s records from %s - %s in %.2fs",
+                count,
+                dataset,
+                start_date,
+                end_date,
+                elapsed,
+            )
+        except Exception:
+            logger.exception("Ingestion failed for %s - %s", start, end)
+            failures.append((start, end))
+    if failures:
+        logger.error("The following datasets failed: %s", failures)
         return 1
     return 0
     

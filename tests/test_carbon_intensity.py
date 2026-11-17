@@ -48,19 +48,14 @@ def test_fetch_retries_503():
         carbon_intensity.fetch(url)
     assert len(responses.calls) == 3
 
-
-def test_validation_pass():
-    assert carbon_intensity.validate(GOOD_PAYLOAD) == 48
-
-
 @pytest.mark.parametrize(
     ("test_input", "expected"),
     [
         (BAD_PAYLOAD, PayloadValidationError),
         ("[]", PayloadValidationError),
         ('{"foo": []}', PayloadValidationError),
-        (json.dumps({"data": [{}] * 12}), PayloadValidationError),
     ],
+    ids=["bad payload", "not json", "doesnt contain data"]
 )
 def test_validation_raises(test_input, expected):
     with pytest.raises(expected):

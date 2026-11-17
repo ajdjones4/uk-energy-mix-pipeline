@@ -55,3 +55,48 @@ def test_expected_records(date_from, date_to, timezone, expected):
 )
 def test_date_window(window, start_date, end_date, expected):
     assert dates.date_window(SNAPSHOT_DATE, window, start_date, end_date) == expected
+
+
+@pytest.mark.parametrize(
+    ("start_date", "end_date", "chunk_length", "expected_output"),
+    [
+        (datetime.date(2026, 11, 1), 
+         datetime.date(2026, 11, 1), 
+         14, 
+         [(datetime.date(2026, 11, 1), datetime.date(2026, 11, 1))]),
+        (datetime.date(2026, 11, 1), 
+         datetime.date(2026, 11, 7), 
+         3, 
+         [(datetime.date(2026, 11, 1), datetime.date(2026, 11, 3)),
+          (datetime.date(2026, 11, 4), datetime.date(2026, 11, 6)),
+          (datetime.date(2026, 11, 7), datetime.date(2026, 11, 7))]),
+        (datetime.date(2026, 11, 1), 
+         datetime.date(2026, 11, 28), 
+         14, 
+         [(datetime.date(2026, 11, 1), datetime.date(2026, 11, 14)),
+         (datetime.date(2026, 11, 15), datetime.date(2026, 11, 28))]),
+        (datetime.date(2026, 11, 1), 
+         datetime.date(2026, 11, 29), 
+         14, 
+         [(datetime.date(2026, 11, 1), datetime.date(2026, 11, 14)),
+         (datetime.date(2026, 11, 15), datetime.date(2026, 11, 28)),
+         (datetime.date(2026, 11, 29), datetime.date(2026, 11, 29))])
+    ]
+)
+def test_chunk_dates(start_date, end_date, chunk_length, expected_output):
+    assert dates.chunk_dates(start_date, end_date, chunk_length) == expected_output
+
+
+@pytest.mark.parametrize(
+        ("chunk_length"),
+        [0, -1],
+)
+def test_chunk_dates_raises(chunk_length):
+    with pytest.raises(ValueError, match="must be greater than"):
+        dates.chunk_dates(datetime.date(2026, 11, 1), datetime.date(2026, 11, 12), chunk_length)
+
+
+
+
+
+

@@ -43,3 +43,16 @@ def expected_records(
     interval = end_date_exclusive_utc - start_date_utc
     periods = interval / datetime.timedelta(minutes=30)
     return int(periods)
+
+def chunk_dates(start_date: datetime.date, 
+                end_date: datetime.date, 
+                chunk_length: int) -> list[tuple[datetime.date, datetime.date]]:
+    if chunk_length < 1:
+        raise ValueError("Chunk length must be greater than 0")
+    chunk_start = start_date
+    chunks = []
+    while chunk_start <= end_date:
+        chunk_end = min(chunk_start + (datetime.timedelta(days=chunk_length - 1)), end_date)
+        chunks.append((chunk_start, chunk_end))
+        chunk_start = chunk_end + datetime.timedelta(days=1)
+    return chunks

@@ -8,10 +8,13 @@ def date_window(
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
 ) -> tuple[datetime.date, datetime.date]:
-    """Take the snapshot date, window length and parsed dates.
-       If dates are empty return default date range.
-       Default end date is yesterday and default start date is
-       the window length before the end date"""
+    """Return the date window for which data should be fetched
+    
+    Missing end_date defaults to the day before snapshot_date, missing 
+    start_date gives a window of window days ending on end_date. Given dates
+    pass through unchanged. Ordering not checked.
+
+    """
     if end_date is None:
         end_date = snapshot_date - datetime.timedelta(days=1)
     if start_date is None:
@@ -22,7 +25,12 @@ def date_window(
 def expected_records(
     start_date: datetime.date, end_date: datetime.date, date_tz: str
 ) -> int:
-    """Calculate the number of 30 minute intervals in the given date range"""
+    """Calculate the number of 30 minute intervals in the given date range.
+    
+    Args:
+        date_tz: The timezone of the date range
+
+    """
     end_date_exclusive = end_date + datetime.timedelta(days=1)
     start_date_local = datetime.datetime.combine(
         start_date, time=datetime.time.min, tzinfo=ZoneInfo(date_tz)

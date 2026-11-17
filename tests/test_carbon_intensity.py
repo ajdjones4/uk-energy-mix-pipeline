@@ -69,4 +69,4 @@ def test_validation_raises(test_input, expected):
 def test_build_source():
     assert carbon_intensity.build_url(source, 
                                       start_date, 
-                                      end_date) == "https://api.carbonintensity.org.uk/intensity/2026-08-07T00:00Z/2026-08-08T00:00Z"
+                                      end_date) == "https://api.carbonintensity.org.uk/intensity/2026-08-07T00:30Z/2026-08-08T00:00Z"

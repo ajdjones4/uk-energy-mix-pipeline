@@ -30,7 +30,12 @@ def build_url(source: str,
               end_date: datetime.date) -> str:
     """Build URL to query REST API. Make end date exclusive and both dates ISO8601."""
     end_date_exclusive = end_date + datetime.timedelta(days=1)
-    url = (f"{source}/{start_date.strftime('%Y-%m-%dT%H:%MZ')}/{end_date_exclusive.strftime('%Y-%m-%dT%H:%MZ')}")
+    start_datetime = datetime.datetime.combine(start_date, datetime.time.min, tzinfo=datetime.UTC)
+    start_date_corrected = start_datetime + datetime.timedelta(minutes=30)
+    end_datetime = datetime.datetime.combine(end_date_exclusive, datetime.time.min, tzinfo=datetime.UTC)
+    start_date_string = start_date_corrected.strftime('%Y-%m-%dT%H:%MZ')
+    end_date_string = end_datetime.strftime('%Y-%m-%dT%H:%MZ')
+    url = (f"{source}/{start_date_string}/{end_date_string}")
     return url
 
 fetch = retry(
